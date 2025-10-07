@@ -10,6 +10,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     final static int Request_Code = 14;
 
+    private ActivityResultLauncher<Intent> launcher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,11 +43,31 @@ public class MainActivity extends AppCompatActivity {
         editText2 = findViewById(R.id.obtenerNumero2);
         resultado = findViewById(R.id.resultado);
 
+        launcher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            Toast.makeText(this, "En el regreso", Toast.LENGTH_SHORT).show();
+                            Integer suma = data.getIntExtra("suma", 0);
+                            resultado.findViewById(R.id.resultado);
+                            if (suma != null) {
+                                resultado.setText(String.valueOf(suma));
+                            } else
+                                Toast.makeText(this, "Error al obtener el resultado", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+        );
 
         botonIrSegunda.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, SegundaActivity.class);
+                abrirSegundaActividad();
+            }
+        });
+                /*Intent intent = new Intent(MainActivity.this, SegundaActivity.class);
 
                 String texto1 = editText1.getText().toString();
                 String texto2 = editText2.getText().toString();
@@ -60,12 +83,33 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("numero1", numero1);
                 intent.putExtra("numero2", numero2);
 
-                startActivityForResult(intent, Request_Code);
-
-
+                //Deprecado
+                //startActivityForResult(intent, Request_Code);
             }
-        });
+        });*/
     }
+
+    //METODO CLICK DEL BOTON
+    private void abrirSegundaActividad() {
+        Intent intent = new Intent(MainActivity.this, SegundaActivity.class);
+
+        String texto1 = editText1.getText().toString();
+        String texto2 = editText2.getText().toString();
+
+        if (TextUtils.isEmpty(texto1) || TextUtils.isEmpty(texto2)) {
+            Toast.makeText(MainActivity.this, "No dejes cajas sin numero", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int numero1 = Integer.parseInt(texto1);
+        int numero2 = Integer.parseInt(texto2);
+
+        intent.putExtra("numero1", numero1);
+        intent.putExtra("numero2", numero2);
+
+        launcher.launch(intent);
+    }
+    
 
     //METODO DE REGRESO
     @Override
